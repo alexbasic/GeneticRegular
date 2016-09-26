@@ -13,7 +13,6 @@ namespace GeneticRegularGenerator
             {
                 return ParseNonTerminal(ExpressionTokens, 0);
             }
-            internal set;
         }
 
         public Token[] ExpressionTokens { get; set; }

@@ -16,10 +16,11 @@ namespace GeneticRegularGenerator
         public IEnumerable<Token> tokensTable = new List<Token> 
         {
             //classes of symbols
-            new Token { Id = 0, Name = "[{0}]", Arity = 1, Value = "[{0}]", IsTerminal = false },
-            new Token { Id = 1, Name = "[^{0}]", Arity = 1, Value = "[^{0}]", IsTerminal = false },
-            new Token { Id = 2, Name = "[{0}-{1}]", Arity = 2, Value = "[{0}-{1}]", IsTerminal = false },
-            new Token { Id = 3, Name = "[^{0}-{1}]", Arity = 2, Value = "[^{0}-{1}]", IsTerminal = false },
+            new Token { Id = 0, Name = "[...]", Arity = 1, Value = "[{0}]", IsTerminal = false },
+            new Token { Id = 1, Name = "[^...]", Arity = 1, Value = "[^{0}]", IsTerminal = false },
+            new Token { Id = 2, Name = "[...-...]", Arity = 2, Value = "[{0}-{1}]", IsTerminal = false },
+            new Token { Id = 3, Name = "[^...-...]", Arity = 2, Value = "[^{0}-{1}]", IsTerminal = false },
+
             new Token { Id = 4, Name = ".", Arity = 0, Value = ".", IsTerminal = true },
             new Token { Id = 5, Name = "\\w", Arity = 0, Value = "\\w", IsTerminal = true },
             new Token { Id = 6, Name = "\\W", Arity = 0, Value = "\\W", IsTerminal = true },
