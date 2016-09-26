@@ -49,8 +49,6 @@ namespace GeneticRegularGenerator
 
         private ICollection<TermExpression> Population { get; set; }
 
-        private ICollection<TermExpression> _newPopulation { get; set; }
-
         private void AddSymbol(string name, int arity, string value, bool isTerminal)
         {
             var id = (tokensTable.Any()) ?
@@ -80,33 +78,88 @@ namespace GeneticRegularGenerator
             }
         }
 
-        public void Run()
+        public void Run(int initialPopulactionCount, int initialVectorSize)
         {
             var mutationFactor = 100;
+            var factorSimpleMutation = 10;
 
-            CreateInitalPopulation(10, 4);
-
-            var generationCounter =0;
+            var generationCounter = 0;
             var maxGenerations = 1000000;
 
-            while(generationCounter<maxGenerations)
+            CreateInitalPopulation(initialPopulactionCount, initialVectorSize);
+
+            while (generationCounter < maxGenerations)
             {
                 CalculateFitnessFunctionForPopulation();
                 TheBestExpression = GetTheBestOne();
                 if (TheBestExpression.FithessFactor > 0.9999) break;
 
-                var rnd = new Random();
-                if ( rnd.Next(mutationFactor) == mutationFactor)
+                //1
+                var selected = Selection(Population);
+                //2
+                var _newPopulation = RecombinePopulation(selected);
+                //3
+                MutatePopulation(_newPopulation, mutationFactor, factorSimpleMutation);
+
+                //Update population
+                Population = _newPopulation;
+            }
+        }
+
+        private ICollection<TermExpression> RecombinePopulation(ICollection<TermExpression> selected)
+        {
+            var newPopulation = new List<TermExpression>();
+            foreach (var item in selected)
+            {
+                foreach (var secondItem in selected)
                 {
-                    //mutation
+                    if (item.Equals(secondItem)) continue;
+                    var newTermExpressions = Recombine(item, secondItem);
+                    newPopulation.AddRange(newTermExpressions);
                 }
             }
+            return newPopulation;
+        }
+
+        private ICollection<TermExpression> Recombine(TermExpression item, TermExpression secondItem)
+        {
+            var firstLength = item.ExpressionTokens.Length;
+            var seconfLength = secondItem.ExpressionTokens.Length;
+            var tokenLength = (firstLength > seconfLength) ? seconfLength : firstLength;
+
+            var takePositions = new Random().Next(tokenLength - 1);
+
+            var firstParticleOfFirst = item.ExpressionTokens.Take(takePositions).AsEnumerable();
+            var SecondParticleOfFirst = item.ExpressionTokens.Skip(takePositions).AsEnumerable();
+            var firstParticleOfSecond = secondItem.ExpressionTokens.Take(takePositions).AsEnumerable();
+            var SecondParticleOfSecond = secondItem.ExpressionTokens.Skip(takePositions).AsEnumerable();
+
+            var result = new List<TermExpression>
+            {
+                new TermExpression
+                {
+                    ExpressionTokens = Enumerable.Concat(firstParticleOfFirst, SecondParticleOfSecond).ToArray(),
+                },
+                new TermExpression
+                {
+                    ExpressionTokens = Enumerable.Concat(firstParticleOfSecond, SecondParticleOfFirst).ToArray(),
+                }
+            };
+
+            return result;
+        }
+
+        private ICollection<TermExpression> Selection(ICollection<TermExpression> Population)
+        {
+            return Population;
         }
 
         private void CreateInitalPopulation(int size, int vectorSize)
         {
             if (size < 1) throw new Exception("Very small population size");
             if (vectorSize < 1) throw new Exception("Very small vector size");
+
+            Population = new List<TermExpression>();
 
             for (var counter = 0; counter < size; counter++)
             {
@@ -116,7 +169,7 @@ namespace GeneticRegularGenerator
 
         private void CalculateFitnessFunctionForPopulation()
         {
-            foreach(var item in Population)
+            foreach (var item in Population)
             {
                 item.FithessFactor = FitnessFunction(item.Expression);
             }
@@ -124,8 +177,8 @@ namespace GeneticRegularGenerator
 
         private TermExpression GetTheBestOne()
         {
-            var bestTerm = Population.First(); 
-            foreach(var item in Population)
+            var bestTerm = Population.First();
+            foreach (var item in Population)
             {
                 var fithessFactor = FitnessFunction(item.Expression);
                 var bestFithessFactor = FitnessFunction(bestTerm.Expression);
@@ -138,26 +191,45 @@ namespace GeneticRegularGenerator
             return bestTerm;
         }
 
-        private void Mutate(TermExpression expression)
+        private void MutatePopulation(IEnumerable<TermExpression> population, int mutationFactor, int factorSimpleMutation)
+        {
+            var rnd = new Random();
+            foreach (var item in population)
+            {
+                if (rnd.Next(mutationFactor) == 0) MutateSingle(item, factorSimpleMutation);
+            }
+        }
+
+        private void MutateSingle(TermExpression expression, int factorSimpleMutation)
         {
             var lengthTokensTable = tokensTable.Count();
-            var tablePosition = new Random().Next(lengthTokensTable-1);
+            var tablePosition = new Random().Next(lengthTokensTable - 1);
 
             var lengthEpression = expression.ExpressionTokens.Length;
-            var position = new Random().Next(lengthEpression-1);
-            expression.ExpressionTokens[position] = tokensTable.ElementAt(tablePosition);
+            var position = new Random().Next(lengthEpression - 1);
+
+            var typeMutation = new Random().Next(factorSimpleMutation);
+            if (typeMutation != 0)
+            {
+                //mutate element
+                expression.ExpressionTokens[position] = tokensTable.ElementAt(tablePosition);
+            }
+            else
+            {
+                //add element to end
+                var token = tokensTable.ElementAt(tablePosition);
+                var expr = expression.ExpressionTokens.ToList();
+                expr.Add(token);
+                if (!token.IsTerminal)
+                {
+                    var terminals = tokensTable.Where(x => x.IsTerminal);
+                    var countTerminals = terminals.Count();
+                    for (var i = 0; i < token.Arity; i++)
+                    {
+                        expr.Add(terminals.ElementAt(new Random().Next(countTerminals - 1)));
+                    }
+                }
+            }
         }
-
-        public void Recombine(TermExpression first, TermExpression second, out TermExpression firstOut, TermExpression secondOut, RecomBineType recomBineType)
-        {
-
-        }
-    }
-
-    public enum RecomBineType
-    {
-        SinglePoint,
-        TwoPoint,
-        MultiPoint
     }
 }
