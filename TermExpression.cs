@@ -11,7 +11,7 @@ namespace GeneticRegularGenerator
         public string Expression {
             get 
             {
-                return ParseNonTerminal(ExpressionTokens, 0);
+                return Parse(ExpressionTokens, 0);
             }
         }
 
@@ -21,26 +21,45 @@ namespace GeneticRegularGenerator
 
         private string ParseNonTerminal(Token[] expression, int position)
         {
-            string result = "";
-            var length = ExpressionTokens.Length;
-            var arityCounter = expression[position].Arity;
+            var token = expression[position];
 
-            result += expression[position]; 
+            List<string> arguments = new List<string>();
 
-            while (arityCounter > 0)
+            for (var i = 0; i < token.Arity; i++)
             {
-                if (ExpressionTokens[position].IsTerminal)
-                {
-                    result += ExpressionTokens[position];
-                }
-                else
-                {
-                    result += ParseNonTerminal(ExpressionTokens, position);
-                }
-
-                arityCounter--;
+                position++;
+                arguments.Add(Parse(expression, position));
             }
-            return string.Format(result, arguments);
+
+            return string.Format(token.Value, arguments);
+        }
+
+        private string ParseTerminal(Token[] expression, int position) 
+        {
+            return expression[position].Value;
+        }
+
+        private string Parse(Token[] expression, int position) 
+        {
+            string result = "";
+
+            if (expression[position].IsTerminal)
+            {
+                result += ParseTerminal(expression, position);
+            }
+            else 
+            {
+                result += ParseNonTerminal(expression, position);
+            }
+
+            position++;
+
+            //if (position < expression.Length - 1)
+            //{
+            //    result += Parse(expression, position);
+            //}
+
+            return result;
         }
     }
 }
