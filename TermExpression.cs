@@ -11,7 +11,13 @@ namespace GeneticRegularGenerator
         public string Expression {
             get 
             {
-                return Parse(ExpressionTokens, 0);
+                var position = 0;
+                var result = "";
+                while (position<ExpressionTokens.Length)
+                {
+                    result += ParseNonTerminal(ExpressionTokens, ref position);
+                }
+                return result;
             }
         }
 
@@ -19,47 +25,28 @@ namespace GeneticRegularGenerator
 
         public double FithessFactor { get; set; }
 
-        private string ParseNonTerminal(Token[] expression, int position)
-        {
-            var token = expression[position];
-
-            List<string> arguments = new List<string>();
-
-            for (var i = 0; i < token.Arity; i++)
-            {
-                position++;
-                arguments.Add(Parse(expression, position));
-            }
-
-            return string.Format(token.Value, arguments);
-        }
-
         private string ParseTerminal(Token[] expression, int position) 
         {
             return expression[position].Value;
         }
 
-        private string Parse(Token[] expression, int position) 
+        //start
+        private string ParseNonTerminal(Token[] expression, ref int position)
         {
-            string result = "";
+            var token = expression[position];
 
-            if (expression[position].IsTerminal)
+            var args = new List<string>();
+            for (var i = 0; i < token.Arity;i++ )
             {
-                result += ParseTerminal(expression, position);
-            }
-            else 
-            {
-                result += ParseNonTerminal(expression, position);
+                position++;
+                string argToken = (expression[position].IsTerminal) ? ParseTerminal(expression, position) : ParseNonTerminal(expression, ref position);
+                args.Add(argToken);
             }
 
             position++;
 
-            //if (position < expression.Length - 1)
-            //{
-            //    result += Parse(expression, position);
-            //}
 
-            return result;
+            return string.Format(token.Value, args.ToArray());
         }
     }
 }

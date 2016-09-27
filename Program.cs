@@ -14,7 +14,7 @@ namespace GeneticRegularGenerator
         {
             //var testWord = "Самарская обл., Безенчукский р-н, пгт. Безенчук, ул. Квартальная";
 
-            var expected = "Квартальная";
+            //var expected = "Квартальная";
 
             //Func<string, double> fitnessFunction = rxp =>
             //{
