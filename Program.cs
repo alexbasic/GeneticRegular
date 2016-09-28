@@ -26,7 +26,8 @@ namespace GeneticRegularGenerator
 
             Func<string, double> fitnessFunction = rxp =>
             {
-                return (Calculate(rxp, testWord, expected) + Calculate(rxp, testWord2, expected2))/2;
+                var t = (rxp.Contains("{{")) ? -100 : 0;
+                return ((Calculate(rxp, testWord, expected) + Calculate(rxp, testWord2, expected2))/2)+t;
             };
 
             var generator = new RegularExpressionGenerator(fitnessFunction);
