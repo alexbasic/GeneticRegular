@@ -39,14 +39,25 @@ namespace GeneticRegularGenerator
             for (var i = 0; i < token.Arity;i++ )
             {
                 position++;
-                string argToken = (expression[position].IsTerminal) ? ParseTerminal(expression, position) : ParseNonTerminal(expression, ref position);
-                args.Add(argToken);
+                if (position < expression.Length)
+                {
+                    string argToken = (expression[position].IsTerminal) ? ParseTerminal(expression, position) : ParseNonTerminal(expression, ref position);
+                    args.Add(argToken);
+                }
             }
 
             position++;
 
-
-            return string.Format(token.Value, args.ToArray());
+            string r = string.Empty;
+            try
+            {
+                r = string.Format(token.Value, args.ToArray());
+            }
+            catch (FormatException ex)
+            {
+                r = token.Value; 
+            }
+            return r;
         }
     }
 }

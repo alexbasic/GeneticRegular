@@ -13,6 +13,8 @@ namespace GeneticRegularGenerator
 
         public Func<string, double> FitnessFunction { get; set; }
 
+        public ICollection<TermExpression> TheBests { get; set; }
+
         public IEnumerable<Token> tokensTable = new List<Token> 
         {
             //classes of symbols
@@ -81,22 +83,34 @@ namespace GeneticRegularGenerator
 
         public void Run(int initialPopulactionCount, int initialVectorSize)
         {
-            var mutationFactor = 100;
-            var factorSimpleMutation = 10;
+            var mutationFactor = 5;
+            var factorSimpleMutation = 7;
 
             var generationCounter = 0;
             var maxGenerations = 1000000;
 
             CreateInitalPopulation(initialPopulactionCount, initialVectorSize);
 
+            TheBests = new List<TermExpression>();
+
             while (generationCounter < maxGenerations)
             {
+                generationCounter++;
                 CalculateFitnessFunctionForPopulation();
                 TheBestExpression = GetTheBestOne();
-                if (TheBestExpression.FithessFactor > 0.9999) break;
+                Console.WriteLine("generation - {0}; population - {1}; TheBest: {2}, Factor: {3}", generationCounter, Population.Count, TheBestExpression.Expression, TheBestExpression.FithessFactor);
+                if (TheBestExpression.FithessFactor > 0)
+                {
+                    if (TheBests.Count<100) TheBests.Add(TheBestExpression); 
+                }
+                if (TheBestExpression.FithessFactor > 999)
+                {
+                    TheBests.Add(TheBestExpression);
+                    break;
+                }
 
                 //1
-                var selected = Selection(Population);
+                var selected = Selection(Population, initialPopulactionCount);
                 //2
                 var _newPopulation = RecombinePopulation(selected);
                 //3
@@ -150,9 +164,10 @@ namespace GeneticRegularGenerator
             return result;
         }
 
-        private ICollection<TermExpression> Selection(ICollection<TermExpression> Population)
+        private ICollection<TermExpression> Selection(ICollection<TermExpression> Population, int populationLimit)
         {
-            return Population;
+            var countForsrlrction = populationLimit; // (int)(Population.Count / 2);
+            return Population.OrderByDescending(x => x.FithessFactor).Take(countForsrlrction).ToList();
         }
 
         private void CreateInitalPopulation(int size, int vectorSize)
@@ -162,9 +177,17 @@ namespace GeneticRegularGenerator
 
             Population = new List<TermExpression>();
 
+            var rnd = new Random();
+
             for (var counter = 0; counter < size; counter++)
             {
-                Population.Add(new TermExpression { ExpressionTokens = new Token[vectorSize] });
+                var tokens = new Token[vectorSize];
+                for(var i=0; i<tokens.Length; i++)
+                {
+                    var position = rnd.Next(tokensTable.Count()-1);
+                    tokens[i] = tokensTable.ElementAt(position);
+                }
+                Population.Add(new TermExpression { ExpressionTokens = tokens });
             }
         }
 
@@ -204,12 +227,13 @@ namespace GeneticRegularGenerator
         private void MutateSingle(TermExpression expression, int factorSimpleMutation)
         {
             var lengthTokensTable = tokensTable.Count();
-            var tablePosition = new Random().Next(lengthTokensTable - 1);
+            var rnd = new Random();
+            var tablePosition = rnd.Next(lengthTokensTable - 1);
 
             var lengthEpression = expression.ExpressionTokens.Length;
-            var position = new Random().Next(lengthEpression - 1);
+            var position = rnd.Next(lengthEpression - 1);
 
-            var typeMutation = new Random().Next(factorSimpleMutation);
+            var typeMutation = rnd.Next(factorSimpleMutation);
             if (typeMutation != 0)
             {
                 //mutate element
@@ -227,7 +251,7 @@ namespace GeneticRegularGenerator
                     var countTerminals = terminals.Count();
                     for (var i = 0; i < token.Arity; i++)
                     {
-                        expr.Add(terminals.ElementAt(new Random().Next(countTerminals - 1)));
+                        expr.Add(terminals.ElementAt(rnd.Next(countTerminals - 1)));
                     }
                 }
             }
